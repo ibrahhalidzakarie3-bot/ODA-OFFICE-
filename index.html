@@ -173,9 +173,15 @@ const SECTIONS=[
   nl:'Métier *',np:'Ex : Électricien, plombier, maçon...',pl:'Tarif indicatif (FCFA) - vide = « Sur devis »',dl:'Ce que fait l\'artisan (facultatif)',dp:'Ex : Installation, dépannage, câblage',v:'Nom de l\'artisan',tl:'Téléphone de l\'artisan'},
  {k:'colis',      t:'Service colis',       e:'📦',max:3,
   nl:'Nom de l\'offre *',np:'Ex : Envoi de colis vers Niamey',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'Ex : Délai 2 jours, colis jusqu\'à 20 kg',v:'Responsable',tl:'Téléphone du responsable'},
+ {k:'longrich',   t:'Longrich',            e:'🌿',prix:1,max:3,
+  nl:'Nom du produit *',np:'Ex : Tisane Longrich',pl:'Prix (FCFA) *',dl:'Description (facultatif)',dp:'Ex : Boîte de 30 sachets',v:'Fournisseur',tl:'Téléphone'},
+ {k:'gaz',        t:'ODA Gaz',             e:'🔥',prix:1,max:3,
+  nl:'Produit *',np:'Ex : Bouteille de gaz 12,5 kg',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'Ex : Livraison incluse',v:'Fournisseur',tl:'Téléphone'},
+ {k:'patisserie', t:'Pâtisserie',          e:'🎂',prix:1,max:3,
+  nl:'Gâteau / produit *',np:'Ex : Gâteau d\'anniversaire',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'Ex : 12 parts, sur commande',v:'Pâtissier',tl:'Téléphone'},
  {k:'transport',  t:'Transport',           e:'🚚',typ:1,max:3,
   nl:'Véhicule / trajet *',np:'Ex : Camion 10 tonnes - Agadez/Niamey',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'Ex : Départ chaque lundi, 15 places',v:'Transporteur',tl:'Téléphone du transporteur'}];
-let tok=null,mail='',tab=SECTIONS[0].k,items=[],photoList=[],videoFile=null; // photoList : {url} déjà en ligne ou {blob,prev} nouvelle
+let tok=null,mail='',tab='pending',items=[],photoList=[],videoFile=null; // photoList : {url} déjà en ligne ou {blob,prev} nouvelle
 try{const s=JSON.parse(localStorage.getItem('oda_admin')||'null');if(s&&s.exp>Date.now()){tok=s.tok;mail=s.mail}}catch(e){}
 const H=x=>Object.assign({apikey:ANON,Authorization:'Bearer '+(tok||ANON)},x||{});
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -203,20 +209,21 @@ async function charger(){
 }
 const agN=c=>AG.filter(a=>a.product_code===c).length,agTxt=c=>AG.filter(a=>a.product_code===c).map(a=>(a.name||'')+' '+(a.phone||'')+' '+(a.id_card||'')).join(' ');
 const ACT={boutique:[['+ Ajouter produit neuf']],marketplace:[['+ Ajouter annonce occasion']],vivrier:[['+ Ajouter produit vivrier']],
- immobilier:[['+ Maison à vendre','vente'],['+ Maison à louer','location'],['+ Boutique à vendre','boutique_vente'],['+ Boutique à louer','boutique_location'],['+ Terrain à vendre','terrain']],travaux:[['+ Ajouter un artisan']],colis:[['+ Ajouter une offre colis']],transport:[['+ Gros camion','camion'],['+ Moto à 3 roues','moto']]};
+ immobilier:[['+ Maison à vendre','vente'],['+ Maison à louer','location'],['+ Boutique à vendre','boutique_vente'],['+ Boutique à louer','boutique_location'],['+ Terrain à vendre','terrain']],travaux:[['+ Ajouter un artisan']],colis:[['+ Ajouter une offre colis']],transport:[['+ Gros camion','camion'],['+ Moto à 3 roues','moto']],longrich:[['+ Produit Longrich']],gaz:[['+ Produit gaz']],patisserie:[['+ Gâteau / pâtisserie']]};
 function afficher(){
-  $('tabs').innerHTML=SECTIONS.map(s=>`<button class="tab${s.k===tab?' on':''}" data-t="${s.k}">${s.e} ${s.t} (${items.filter(p=>p.section===s.k).length})</button>`).join('');
-  const S=SECTIONS.find(s=>s.k===tab);
-  $('actions').innerHTML=tok?(ACT[tab]||[['+ Ajouter']]).map((a,i)=>'<button class="ab1'+(i?' o':'')+'" data-add="'+tab+'" data-typ="'+(a[1]||'')+'" type="button">'+a[0]+'</button>').join(''):'<button class="ab1" data-login="1" type="button">Se connecter</button>';
+  const att=items.filter(p=>p.status==='En attente');
+  $('tabs').innerHTML=`<button class="tab${tab==='pending'?' on':''}" data-t="pending">⏳ En attente (${att.length})</button>`+SECTIONS.map(s=>`<button class="tab${s.k===tab?' on':''}" data-t="${s.k}">${s.e} ${s.t} (${items.filter(p=>p.section===s.k&&p.status!=='En attente').length})</button>`).join('');
+  const S=SECTIONS.find(s=>s.k===tab)||SECTIONS[0];
+  $('actions').innerHTML=tok?(tab==='pending'?[]:(ACT[tab]||[['+ Ajouter']])).map((a,i)=>'<button class="ab1'+(i?' o':'')+'" data-add="'+tab+'" data-typ="'+(a[1]||'')+'" type="button">'+a[0]+'</button>').join(''):'<button class="ab1" data-login="1" type="button">Se connecter</button>';
   if(!tok){$('liste').innerHTML='<div class="empty">🔒<br>Connecte-toi pour gérer les produits.</div>';return}
   const q=$('q').value.trim().toLowerCase();
   // la recherche par code ou par téléphone cherche dans tous les services
-  const l=items.filter(p=>q?((p.name||'')+' '+(p.code||'')+' '+(p.seller_name||'')+' '+(p.seller_phone||'')+' '+agTxt(p.code)).toLowerCase().includes(q):p.section===tab);
+  const l=items.filter(p=>q?((p.name||'')+' '+(p.code||'')+' '+(p.seller_name||'')+' '+(p.seller_phone||'')+' '+agTxt(p.code)).toLowerCase().includes(q):(tab==='pending'?p.status==='En attente':(p.section===tab&&p.status!=='En attente')));
   $('liste').innerHTML=l.length?l.map(p=>{
     const T=SECTIONS.find(s=>s.k===p.section)||S,img=p.photo||p.image_url||THUMBS[p.code];
     return `<div class="it" data-id="${esc(p.id)}">${img?`<img class="th" src="${esc(img)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=th>${T.e}</div>'">`:`<div class="th">${p.video_url?'🎬':T.e}</div>`}
-    <div class="in"><b>${esc(p.name)}</b><div class="pr">${prixTxt(p)}</div><span class="code">${esc(p.code||'—')}</span>${q?'<span class="sub">'+T.t+'</span>':''}${agN(p.code)?'<span class="sub">👷 '+agN(p.code)+'</span>':''}</div><div class="chev">›</div></div>`}).join('')
-    :'<div class="empty z">'+(q?'Aucun résultat.':'Aucune marchandise')+'</div>';
+    <div class="in"><b>${esc(p.name)}</b><div class="pr">${prixTxt(p)}</div><span class="code">${p.status==='En attente'?'⏳ EN ATTENTE':esc(p.code||'—')}</span>${p.ville?'<span class="sub">📍 '+esc(p.ville)+'</span>':''}${q?'<span class="sub">'+T.t+'</span>':''}${agN(p.code)?'<span class="sub">👷 '+agN(p.code)+'</span>':''}</div><div class="chev">›</div></div>`}).join('')
+    :'<div class="empty z">'+(q?'Aucun résultat.':(tab==='pending'?'Aucun produit en attente':'Aucune marchandise'))+'</div>';
 }
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;$('q').value='';afficher()}};
 $('q').oninput=afficher;
@@ -231,13 +238,15 @@ function ouvrirDetail(id){
   const media=p.video_url?`<video class="media" src="${esc(p.video_url)}" ${img?'poster="'+esc(img)+'"':''} controls playsinline preload="metadata"></video>`:(ph.length?`<div style="display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory">${ph.map(u=>`<img class="media" style="flex:0 0 ${ph.length>1?'88%':'100%'};scroll-snap-align:center" src="${esc(u)}" alt="">`).join('')}</div>`:'');
   const d=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'';
   $('db').innerHTML=media+`<span class="code" style="font-size:13px">${esc(p.code||'—')}</span><div class="dc">${esc(p.name)}</div><div class="pr" style="font-size:16px">${prixTxt(p)}</div>
-  ${kv('Service',T.e+' '+T.t)}${kv('Type',TYPN[p.sous_categorie]||'')}${kv('Description',p.description)}${kv('Ajouté le',d)}
+  ${kv('Service',T.e+' '+T.t)}${kv('Type',TYPN[p.sous_categorie]||'')}${kv('Description',p.description)}${p.status==='En attente'?kv('Ville',p.ville||'')+kv('Prix d\'achat (fournisseur)',Number(p.buy_price)>0?fmt(p.buy_price):'')+kv('Statut','⏳ En attente de confirmation'):''}${kv('Ajouté le',d)}
   <div class="vend"><h3>🔒 Vendeur (privé)</h3>${kv('Nom',p.seller_name||'—')}${kv('Téléphone',p.seller_phone||'—')}
   ${tel(p.seller_phone)?`<div class="btns"><a class="call" href="tel:${tel(p.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
   ${agentsHTML(p)}
+  ${p.status==='En attente'?'<div class="btns"><button class="ok" id="dapp" type="button">✅ Approuver et publier</button><button class="del" id="dref" type="button">❌ Refuser</button></div>':''}
   <div class="btns"><button class="ok" id="dmod" type="button">✏️ Modifier</button><button class="del" id="ddel" type="button">Supprimer</button></div><div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
   $('ds').hidden=false;
   $('dno').onclick=fermerDetail;
+  if($('dapp')){$('dapp').onclick=()=>approuver(p);$('dref').onclick=()=>supprimer(p,true)}
   $('ddel').onclick=()=>supprimer(p);
   $('dag').onclick=()=>{fermerDetail();ouvrirAgent(p)};
   $('db').querySelectorAll('[data-agdel]').forEach(b=>b.onclick=()=>supprAgent(b.dataset.agdel,p));
@@ -264,13 +273,17 @@ async function supprAgent(id,p){
   try{await api('/rest/v1/agents?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:H({Prefer:'return=minimal'})});AG=AG.filter(a=>a.id!==id);afficher();ouvrirDetail(p.id);toast('Agent retiré')}catch(e){toast('⚠️ '+e.message,4000)}}
 function fermerDetail(){const v=$('db').querySelector('video');if(v)v.pause();$('ds').hidden=true}
 $('ds').onclick=e=>{if(e.target===$('ds'))fermerDetail()};
-async function supprimer(p){
-  if(!confirm('Supprimer « '+p.name+' » ('+(p.code||'')+') ?\nCette action est définitive.'))return;
+async function approuver(p){
+  try{const code=prochainCode();const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify({status:'En stock',code})});
+    Object.assign(p,(res&&res[0])||{status:'En stock',code});fermerDetail();afficher();toast('✅ '+code+' publié')}catch(err){toast('⚠️ '+err.message,4000)}
+}
+async function supprimer(p,refus){
+  if(!confirm(refus?'Refuser « '+p.name+' » ? Le produit et ses photos seront supprimés.':'Supprimer « '+p.name+' » ('+(p.code||'')+') ?\nCette action est définitive.'))return;
   try{
     await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',headers:H({Prefer:'return=minimal'})});
-    items=items.filter(x=>x.id!==p.id);fermerDetail();afficher();toast('🗑️ '+(p.code||'Annonce')+' supprimée');
+    items=items.filter(x=>x.id!==p.id);fermerDetail();afficher();toast(refus?'❌ Produit refusé':'🗑️ '+(p.code||'Annonce')+' supprimé(e)');
     // on libère aussi l'espace sur Cloudflare (sans bloquer si ça échoue)
-    [p.photo,p.image_url,p.video_url].filter(u=>u&&u.startsWith(R2_BASE)).forEach(u=>fetch(CF_UPLOAD_URL+'?key='+encodeURIComponent(u.slice(R2_BASE.length)),{method:'DELETE',headers:{Authorization:'Bearer '+tok}}).catch(()=>{}));
+    [p.photo,p.image_url,p.video_url,...(Array.isArray(p.photos)?p.photos:[])].filter(u=>u&&u.startsWith(R2_BASE)).forEach(u=>fetch(CF_UPLOAD_URL+'?key='+encodeURIComponent(u.slice(R2_BASE.length)),{method:'DELETE',headers:{Authorization:'Bearer '+tok}}).catch(()=>{}));
   }catch(err){toast('⚠️ '+err.message,4000);if(/connecte-toi/i.test(err.message))ouvrirLogin()}
 }
 
