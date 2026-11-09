@@ -86,7 +86,15 @@ textarea{min-height:60px;resize:vertical}
 .out{display:block;width:100%;margin:18px 0 8px;height:44px;border-radius:14px;border:1px solid rgba(255,90,90,.45);background:rgba(255,255,255,.03);color:#ff6b6b;font-weight:700;font-size:13px}
 .out[hidden]{display:none}
 .fab{display:none!important}
-@media(min-width:900px){body{max-width:560px}}
+@media(min-width:900px){
+ body{max-width:1180px;padding:0 28px 60px;font-size:15px}
+ .tabs{flex-wrap:wrap;overflow:visible;gap:8px}
+ #liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-content:start}
+ #liste .it{margin-top:0}#liste .empty,#liste .z{grid-column:1/-1}
+ .sheet{align-items:center}.box{border-radius:22px;max-width:640px;max-height:90vh;border:1px solid var(--gb)}
+ .team{max-width:900px;margin:10px auto}
+ .toast{bottom:30px}
+}
 </style>
 </head>
 <body>
@@ -98,7 +106,6 @@ textarea{min-height:60px;resize:vertical}
 <div id="actions"></div>
 <div class="reg" id="regbar"></div><div class="team" id="team" hidden></div>
 <main id="liste"></main>
-<button class="out" id="out" type="button" hidden>⎋ Se déconnecter</button>
 
 <!-- Détail d'un produit -->
 <div class="sheet" id="ds" hidden><div class="box" id="db"></div></div>
@@ -106,7 +113,7 @@ textarea{min-height:60px;resize:vertical}
 <!-- Ajout -->
 <div class="sheet" id="fs" hidden><div class="box">
   <h2 id="fh">Ajouter une annonce</h2>
-  <label>Service</label><select id="fsec"></select>
+  <select id="fsec" hidden></select>
   <div id="tbox"><label>Type d'annonce *</label><select id="ftyp"><option value="">Choisis...</option><option value="terrain">🏞️ Acheter un terrain</option><option value="vente">🏠 Maison à vendre</option><option value="location">🏠 Maison à louer</option><option value="boutique_vente">🏪 Boutique à vendre</option><option value="boutique_location">🏪 Boutique à louer</option></select></div>
   <label id="fnl">Nom *</label><input id="fnom" placeholder="">
   <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="">
@@ -197,7 +204,7 @@ async function api(path,opt){
     throw new Error(m||('Erreur '+r.status))}
   return r.status===204?null:r.json().catch(()=>null);
 }
-function head(){$('who').textContent=tok?('Connecté : '+mail):'Non connecté';$('lg').textContent=tok?'Déconnexion':'Se connecter';$('out').hidden=!tok}
+function head(){$('who').textContent=tok?('Connecté : '+mail):'Non connecté';$('lg').textContent=tok?'Déconnexion':'Se connecter'}
 const tel=p=>String(p||'').replace(/\D/g,'');
 const telWa=p=>{const d=tel(p);return d.length===8?'227'+d:d};
 
@@ -212,9 +219,10 @@ async function chargerProfil(){
     if(m.role==='admin'&&!m.region)SUPER=true;else if(m.region)MYREG=m.region;else if(m.role==='admin')SUPER=true}catch(e){}
   try{REGS=await api('/rest/v1/regions?select=*&order=ordre',{headers:H()})||[]}catch(e){REGS=[]}
   $('regbar').innerHTML='';
-  document.querySelector('.ab').textContent='⚙️ ADMIN '+(MYREG?regNom(MYREG).toUpperCase():(SUPER?'ODA (TOUTES RÉGIONS)':'—'));
+  document.querySelector('.ab').textContent='⚙️ ADMIN '+(MYREG?regNom(MYREG).toUpperCase():(SUPER?'ODA':'—'));
   if(MYREG)$('regbar').textContent='Région '+regNom(MYREG)+' — tu gères uniquement les produits de cette région.';
-  else if(SUPER){$('regbar').innerHTML='Région : <select id="rsel"><option value="">Toutes</option>'+Object.keys(REGN).map(r=>'<option value="'+r+'"'+(RF===r?' selected':'')+'>'+REGN[r]+'</option>').join('')+'</select> <button class="lg" id="teamb" type="button" style="margin-left:6px">👥 Régions & équipe</button>';
+  else if(SUPER){RF='agadez';/* choix des régions masqué pour le moment */}
+  else if(false){$('regbar').innerHTML='Région : <select id="rsel"><option value="">Toutes</option>'+Object.keys(REGN).map(r=>'<option value="'+r+'"'+(RF===r?' selected':'')+'>'+REGN[r]+'</option>').join('')+'</select> <button class="lg" id="teamb" type="button" style="margin-left:6px">👥 Régions & équipe</button>';
     $('rsel').onchange=()=>{RF=$('rsel').value;charger()};$('teamb').onclick=ouvrirEquipe}
   else $('regbar').textContent="Ce compte n'a pas de région : demande à l'administrateur principal de t'en attribuer une.";
 }
@@ -464,7 +472,6 @@ $('lg').onclick=()=>{
   if(tok){tok=null;mail='';MYREG=null;SUPER=false;RF='';$('team').hidden=true;$('regbar').innerHTML='';try{localStorage.removeItem('oda_admin')}catch(e){}head();charger();toast('Déconnecté');return}
   ouvrirLogin();
 };
-$('out').onclick=()=>$('lg').click();
 $('lno').onclick=()=>$('ls').hidden=true;
 $('lok').onclick=async()=>{
   $('lok').disabled=true;$('lmsg').textContent='Connexion...';
