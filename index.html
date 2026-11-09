@@ -78,7 +78,7 @@ textarea{min-height:60px;resize:vertical}
 .ab1{flex:1;min-width:46%;height:46px;border-radius:14px;border:1.5px solid var(--y);background:linear-gradient(180deg,var(--y2),var(--y));color:#111;font-weight:800;font-size:12px;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;transition:transform .12s}
 .ab1.o{background:transparent;color:var(--y2)}
 .ab1:active{transform:scale(.97)}
-.reg{text-align:center;color:#8a8a8a;font-size:10.5px;margin:8px 0 2px}
+.team{background:#161616;border:1px solid #2a2a2a;border-radius:12px;margin:8px 12px;padding:10px;font-size:12px;color:#ddd}.team h4{margin:8px 0 4px;font-size:13px;color:#D9A21A}.team input,.team select{background:#0e0e0e;color:#fff;border:1px solid #333;border-radius:8px;padding:7px;font-size:12px;margin:2px 0;max-width:100%}.team button{background:#D9A21A;color:#000;border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12px;margin:2px}.team .rw{display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #262626;padding:5px 0}.reg select{background:#161616;color:#D9A21A;border:1px solid #333;border-radius:8px;padding:4px 6px;font-size:11px}.reg{text-align:center;color:#8a8a8a;font-size:10.5px;margin:8px 0 2px}
 #liste{position:relative;min-height:46vh}
 #liste::before{content:"";position:absolute;inset:0;background:var(--wm) center 30%/78% no-repeat;opacity:.07;filter:grayscale(1) invert(1);pointer-events:none}
 #liste>*{position:relative}
@@ -91,12 +91,12 @@ textarea{min-height:60px;resize:vertical}
 </head>
 <body>
 <header>
-  <div class="top"><img class="logo" id="logo" alt="ODA SHOP" hidden><div class="ab">⚙️ ADMIN AGADEZ</div><div class="who" id="who">Chargement...</div><button class="lg" id="lg" type="button">Se connecter</button></div>
+  <div class="top"><img class="logo" id="logo" alt="ODA SHOP" hidden><div class="ab">⚙️ ADMIN</div><div class="who" id="who">Chargement...</div><button class="lg" id="lg" type="button">Se connecter</button></div>
   <div class="tabs" id="tabs"></div>
-  <div class="sw"><span>🔍</span><input class="srch" id="q" type="search" placeholder="Rechercher (code, nom ou identification)..." autocomplete="off"></div>
+  <div class="sw"><span>🔍</span><input class="srch" id="q" type="search" placeholder="Rechercher (nom, vendeur ou téléphone)..." autocomplete="off"></div>
 </header>
 <div id="actions"></div>
-<div class="reg">Région Agadez — vos ajouts sont limités à cette région.</div>
+<div class="reg" id="regbar"></div><div class="team" id="team" hidden></div>
 <main id="liste"></main>
 <button class="out" id="out" type="button" hidden>⎋ Se déconnecter</button>
 
@@ -108,9 +108,9 @@ textarea{min-height:60px;resize:vertical}
   <h2 id="fh">Ajouter une annonce</h2>
   <label>Service</label><select id="fsec"></select>
   <div id="tbox"><label>Type d'annonce *</label><select id="ftyp"><option value="">Choisis...</option><option value="terrain">🏞️ Acheter un terrain</option><option value="vente">🏠 Maison à vendre</option><option value="location">🏠 Maison à louer</option><option value="boutique_vente">🏪 Boutique à vendre</option><option value="boutique_location">🏪 Boutique à louer</option></select></div>
-  <label id="fnl">Nom *</label><input id="fnom" placeholder="Ex : Bouilloire électrique 1.7L">
-  <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="18000">
-  <label id="fdl">Description (facultatif)</label><textarea id="fdesc" placeholder="Ex : Neuf, garantie 1 an"></textarea>
+  <label id="fnl">Nom *</label><input id="fnom" placeholder="">
+  <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="">
+  <label id="fdl">Description (facultatif)</label><textarea id="fdesc" placeholder=""></textarea>
   <label id="fpt">Photos (jusqu'à 6, la 1re est la photo principale)</label>
   <div class="ths" id="ths"></div>
   <div class="pick"><label class="p" for="ffile">📷 Ajouter des photos (appuie plusieurs fois pour en ajouter d'autres)</label></div>
@@ -119,7 +119,7 @@ textarea{min-height:60px;resize:vertical}
   <div class="pick"><video id="vv" muted playsinline hidden></video><label class="p" for="fvf">🎬 Choisir une vidéo (40 Mo max)</label></div>
   <input type="file" id="fvf" accept="video/*" hidden></div>
   <label id="fvl">Vendeur</label><input id="fven" placeholder="Nom du vendeur">
-  <label id="ftl">Téléphone du vendeur</label><input id="ftel" type="tel" placeholder="90 00 00 00">
+  <label id="ftl">Téléphone du vendeur</label><input id="ftel" type="tel" placeholder="">
   <div style="font-size:10.5px;color:#8a8a8a;margin-top:4px">🔒 Nom et téléphone ne sont visibles que dans cette page, jamais par les clients.</div>
   <div class="bar" id="bar" hidden><i id="bari"></i></div>
   <div class="msg" id="fmsg"></div>
@@ -136,11 +136,11 @@ textarea{min-height:60px;resize:vertical}
 </div></div>
 <div class="sheet" id="as" hidden><div class="box">
   <h2 id="ah">Nouvel agent</h2>
-  <label>Nom et prénom *</label><input id="anm" placeholder="Ex : Moussa Abdou">
-  <label>Téléphone</label><input id="atl" type="tel" placeholder="90 00 00 00">
+  <label>Nom et prénom *</label><input id="anm" placeholder="">
+  <label>Téléphone</label><input id="atl" type="tel" placeholder="">
   <label>N° de la carte d'identité</label><input id="aci" placeholder="Numéro de la CNI">
-  <label>Adresse / quartier</label><input id="aad" placeholder="Ex : Sabon Gari">
-  <label>Notes (facultatif)</label><textarea id="ano" placeholder="Ex : disponible le matin"></textarea>
+  <label>Adresse / quartier</label><input id="aad" placeholder="">
+  <label>Notes (facultatif)</label><textarea id="ano" placeholder=""></textarea>
   <div style="font-size:10.5px;color:#8a8a8a;margin-top:4px">🔒 Ces informations ne sont visibles que dans l'admin, jamais par les clients.</div>
   <div class="msg" id="amsg"></div>
   <div class="btns"><button class="no" id="ano_" type="button">Annuler</button><button class="ok" id="aok" type="button">Enregistrer</button></div>
@@ -162,26 +162,28 @@ const TYPN={terrain:'Acheter un terrain',location:'Maison à louer',vente:'Maiso
 let AG=[];
 const SECTIONS=[
  {k:'boutique',   t:'Produits neufs',      e:'🛍️',prix:1,max:6,
-  nl:'Nom du produit *',np:'Ex : Bouilloire électrique 1.7L',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'Ex : Neuf, garantie 1 an',v:'Vendeur / fournisseur',tl:'Téléphone du vendeur'},
+  nl:'Nom du produit *',np:'',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Vendeur / fournisseur',tl:'Téléphone du vendeur'},
  {k:'marketplace',t:"Produits d'occasion", e:'♻️',prix:1,max:6,
-  nl:'Nom du produit *',np:'Ex : Téléviseur Samsung 43 pouces',pl:'Prix demandé (FCFA) *',dl:'État et détails',dp:'Ex : Très bon état, 2 ans, avec télécommande',v:'Propriétaire',tl:'Téléphone du propriétaire'},
+  nl:'Nom du produit *',np:'',pl:'Prix demandé (FCFA) *',dl:'État et détails',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
+ {k:'automobile', t:'Automobile',          e:'🚗',prix:1,max:5,
+  nl:'Nom du produit *',np:'',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
  {k:'vivrier',    t:'Produits vivriers',   e:'🌾',prix:1,max:3,
-  nl:'Produit *',np:'Ex : Riz local - sac de 25 kg',pl:'Prix (FCFA) *',dl:'Quantité, origine (facultatif)',dp:'Ex : Sac de 25 kg, récolte de cette saison',v:'Fournisseur / agriculteur',tl:'Téléphone du fournisseur'},
+  nl:'Produit *',np:'',pl:'Prix (FCFA) *',dl:'Quantité, origine (facultatif)',dp:'',v:'Fournisseur / agriculteur',tl:'Téléphone du fournisseur'},
  {k:'immobilier', t:'Immobilier',          e:'🏢',vid:1,typ:1,max:6,
-  nl:'Titre de l\'annonce *',np:'Ex : Terrain 600 m² - Sabon Gari',pl:'Prix (FCFA) - vide = « Sur devis »',dl:'Quartier, surface, nombre de pièces...',dp:'Ex : 3 chambres, 1 salon, cour, eau et électricité',v:'Propriétaire / agent',tl:'Téléphone du propriétaire'},
+  nl:'Titre de l\'annonce *',np:'',pl:'Prix (FCFA) - vide = « Sur devis »',dl:'Quartier, surface, nombre de pièces...',dp:'',v:'Propriétaire / agent',tl:'Téléphone du propriétaire'},
  {k:'travaux',    t:'Travaux à domicile',  e:'🛠️',max:3,
-  nl:'Métier *',np:'Ex : Électricien, plombier, maçon...',pl:'Tarif indicatif (FCFA) - vide = « Sur devis »',dl:'Ce que fait l\'artisan (facultatif)',dp:'Ex : Installation, dépannage, câblage',v:'Nom de l\'artisan',tl:'Téléphone de l\'artisan'},
+  nl:'Métier *',np:'',pl:'Tarif indicatif (FCFA) - vide = « Sur devis »',dl:'Ce que fait l\'artisan (facultatif)',dp:'',v:'Nom de l\'artisan',tl:'Téléphone de l\'artisan'},
  {k:'colis',      t:'Service colis',       e:'📦',max:3,
-  nl:'Nom de l\'offre *',np:'Ex : Envoi de colis vers Niamey',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'Ex : Délai 2 jours, colis jusqu\'à 20 kg',v:'Responsable',tl:'Téléphone du responsable'},
+  nl:'Nom de l\'offre *',np:'',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'',v:'Responsable',tl:'Téléphone du responsable'},
  {k:'longrich',   t:'Longrich',            e:'🌿',prix:1,max:3,
-  nl:'Nom du produit *',np:'Ex : Tisane Longrich',pl:'Prix (FCFA) *',dl:'Description (facultatif)',dp:'Ex : Boîte de 30 sachets',v:'Fournisseur',tl:'Téléphone'},
+  nl:'Nom du produit *',np:'',pl:'Prix (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Fournisseur',tl:'Téléphone'},
  {k:'gaz',        t:'ODA Gaz',             e:'🔥',prix:1,max:3,
-  nl:'Produit *',np:'Ex : Bouteille de gaz 12,5 kg',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'Ex : Livraison incluse',v:'Fournisseur',tl:'Téléphone'},
+  nl:'Produit *',np:'',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'',v:'Fournisseur',tl:'Téléphone'},
  {k:'patisserie', t:'Pâtisserie',          e:'🎂',prix:1,max:3,
-  nl:'Gâteau / produit *',np:'Ex : Gâteau d\'anniversaire',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'Ex : 12 parts, sur commande',v:'Pâtissier',tl:'Téléphone'},
+  nl:'Gâteau / produit *',np:'',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'',v:'Pâtissier',tl:'Téléphone'},
  {k:'transport',  t:'Transport',           e:'🚚',typ:1,max:3,
-  nl:'Véhicule / trajet *',np:'Ex : Camion 10 tonnes - Agadez/Niamey',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'Ex : Départ chaque lundi, 15 places',v:'Transporteur',tl:'Téléphone du transporteur'}];
-let tok=null,mail='',tab='pending',items=[],photoList=[],videoFile=null; // photoList : {url} déjà en ligne ou {blob,prev} nouvelle
+  nl:'Véhicule / trajet *',np:'',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'',v:'Transporteur',tl:'Téléphone du transporteur'}];
+let FOUR=[],MYREG=null,SUPER=false,REGS=[],RF='',tok=null,mail='',tab='pending',items=[],photoList=[],videoFile=null; // photoList : {url} déjà en ligne ou {blob,prev} nouvelle
 try{const s=JSON.parse(localStorage.getItem('oda_admin')||'null');if(s&&s.exp>Date.now()){tok=s.tok;mail=s.mail}}catch(e){}
 const H=x=>Object.assign({apikey:ANON,Authorization:'Bearer '+(tok||ANON)},x||{});
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -200,15 +202,47 @@ const tel=p=>String(p||'').replace(/\D/g,'');
 const telWa=p=>{const d=tel(p);return d.length===8?'227'+d:d};
 
 // ===== Liste =====
+const REGN={agadez:'Agadez',diffa:'Diffa',dosso:'Dosso',maradi:'Maradi',niamey:'Niamey',tahoua:'Tahoua',tillaberi:'Tillabéri',zinder:'Zinder'};
+const regNom=r=>REGN[r]||r;
+const regActive=()=>MYREG||RF||''; // région dont on gère les produits ('' = toutes, super-admin)
+async function chargerProfil(){
+  MYREG=null;SUPER=false;REGS=[];
+  if(!tok){return}
+  try{const p=await api('/rest/v1/profiles?select=role,region&email=eq.'+encodeURIComponent(mail),{headers:H()});const m=(p&&p[0])||{};
+    if(m.role==='admin'&&!m.region)SUPER=true;else if(m.region)MYREG=m.region;else if(m.role==='admin')SUPER=true}catch(e){}
+  try{REGS=await api('/rest/v1/regions?select=*&order=ordre',{headers:H()})||[]}catch(e){REGS=[]}
+  $('regbar').innerHTML='';
+  document.querySelector('.ab').textContent='⚙️ ADMIN '+(MYREG?regNom(MYREG).toUpperCase():(SUPER?'ODA (TOUTES RÉGIONS)':'—'));
+  if(MYREG)$('regbar').textContent='Région '+regNom(MYREG)+' — tu gères uniquement les produits de cette région.';
+  else if(SUPER){$('regbar').innerHTML='Région : <select id="rsel"><option value="">Toutes</option>'+Object.keys(REGN).map(r=>'<option value="'+r+'"'+(RF===r?' selected':'')+'>'+REGN[r]+'</option>').join('')+'</select> <button class="lg" id="teamb" type="button" style="margin-left:6px">👥 Régions & équipe</button>';
+    $('rsel').onchange=()=>{RF=$('rsel').value;charger()};$('teamb').onclick=ouvrirEquipe}
+  else $('regbar').textContent="Ce compte n'a pas de région : demande à l'administrateur principal de t'en attribuer une.";
+}
+async function ouvrirEquipe(){
+  const t=$('team');if(!t.hidden){t.hidden=true;return}
+  let eq=[];try{eq=await api('/rest/v1/rpc/equipe_regions',{method:'POST',headers:H({'Content-Type':'application/json'}),body:'{}'})||[]}catch(e){}
+  t.innerHTML='<h4>🗺️ Régions (ouverture et WhatsApp)</h4>'+REGS.map(r=>'<div class="rw"><b style="min-width:70px">'+esc(r.name||regNom(r.slug))+'</b><label><input type="checkbox" data-ra="'+esc(r.slug)+'" '+(r.active?'checked':'')+'> ouverte</label><input data-rw="'+esc(r.slug)+'" placeholder="" value="'+esc(r.whatsapp||'')+'" style="width:150px"><button data-rs="'+esc(r.slug)+'" type="button">OK</button></div>').join('')
+   +'<h4>👥 Administrateurs de région</h4>'+(eq.length?eq.map(m=>'<div class="rw"><span style="flex:1">'+esc(m.email)+' — <b>'+esc(regNom(m.region||''))+'</b></span><button data-rm="'+esc(m.email)+'" type="button">Retirer</button></div>').join(''):'<div style="color:#888">Aucun administrateur de région pour le moment.</div>')
+   +'<div class="rw"><input id="teml" placeholder="e-mail du compte (créé dans Supabase)" style="flex:1;min-width:150px"><select id="treg">'+Object.keys(REGN).map(r=>'<option value="'+r+'">'+REGN[r]+'</option>').join('')+'</select><button id="tadd" type="button">Attribuer</button></div><div id="tmsg" style="color:#D9A21A;margin-top:4px"></div>';
+  t.hidden=false;
+  const rpc=(f,b)=>api('/rest/v1/rpc/'+f,{method:'POST',headers:H({'Content-Type':'application/json'}),body:JSON.stringify(b)});
+  t.querySelectorAll('[data-rs]').forEach(b=>b.onclick=async()=>{const sl=b.dataset.rs,w=t.querySelector('[data-rw="'+sl+'"]').value.replace(/\D/g,''),a=t.querySelector('[data-ra="'+sl+'"]').checked;
+    try{await api('/rest/v1/regions?slug=eq.'+sl,{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify({active:a,whatsapp:w||null})});toast('✅ '+regNom(sl)+' enregistrée')}catch(e){toast('⚠️ '+e.message)}});
+  t.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{try{await rpc('retirer_region',{p_email:b.dataset.rm});t.hidden=true;ouvrirEquipe()}catch(e){toast('⚠️ '+e.message)}});
+  $('tadd').onclick=async()=>{const em=$('teml').value.trim();if(!em){$('tmsg').textContent="Écris l'e-mail.";return}
+    try{await rpc('donner_region',{p_email:em,p_region:$('treg').value});t.hidden=true;ouvrirEquipe();toast('✅ Région attribuée')}catch(e){$('tmsg').textContent='⚠️ '+e.message}};
+}
 async function charger(){
   if(!tok){items=[];afficher();return}
-  try{items=await api('/rest/v1/products?select=*&order=created_at.desc&limit=1000',{headers:H()})||[]}
+  const RQ=regActive()?'&region=eq.'+regActive():'';
+  try{items=await api('/rest/v1/products?select=*'+RQ+'&order=created_at.desc&limit=1000',{headers:H()})||[]}
   catch(e){items=[];$('liste').innerHTML='<div class="empty">⚠️ '+esc(e.message)+'</div>';if(/connecte-toi/i.test(e.message)){tok=null;try{localStorage.removeItem('oda_admin')}catch(x){}head();ouvrirLogin()}return}
-  try{AG=await api('/rest/v1/agents?select=*&order=created_at.desc&limit=2000',{headers:H()})||[]}catch(e){AG=[]}
+  try{AG=await api('/rest/v1/agents?select=*'+RQ+'&order=created_at.desc&limit=2000',{headers:H()})||[]}catch(e){AG=[]}
+  try{FOUR=await api('/rest/v1/fournisseurs?select=*'+RQ,{headers:H()})||[]}catch(e){FOUR=[]}
   afficher();
 }
 const agN=c=>AG.filter(a=>a.product_code===c).length,agTxt=c=>AG.filter(a=>a.product_code===c).map(a=>(a.name||'')+' '+(a.phone||'')+' '+(a.id_card||'')).join(' ');
-const ACT={boutique:[['+ Ajouter produit neuf']],marketplace:[['+ Ajouter annonce occasion']],vivrier:[['+ Ajouter produit vivrier']],
+const ACT={boutique:[['+ Ajouter produit neuf']],marketplace:[['+ Ajouter annonce occasion']],automobile:[['+ Ajouter un véhicule']],vivrier:[['+ Ajouter produit vivrier']],
  immobilier:[['+ Maison à vendre','vente'],['+ Maison à louer','location'],['+ Boutique à vendre','boutique_vente'],['+ Boutique à louer','boutique_location'],['+ Terrain à vendre','terrain']],travaux:[['+ Ajouter un artisan']],colis:[['+ Ajouter une offre colis']],transport:[['+ Gros camion','camion'],['+ Moto à 3 roues','moto']],longrich:[['+ Produit Longrich']],gaz:[['+ Produit gaz']],patisserie:[['+ Gâteau / pâtisserie']]};
 function afficher(){
   const att=items.filter(p=>p.status==='En attente');
@@ -217,6 +251,7 @@ function afficher(){
   $('actions').innerHTML=tok?(tab==='pending'?[]:(ACT[tab]||[['+ Ajouter']])).map((a,i)=>'<button class="ab1'+(i?' o':'')+'" data-add="'+tab+'" data-typ="'+(a[1]||'')+'" type="button">'+a[0]+'</button>').join(''):'<button class="ab1" data-login="1" type="button">Se connecter</button>';
   if(!tok){$('liste').innerHTML='<div class="empty">🔒<br>Connecte-toi pour gérer les produits.</div>';return}
   const q=$('q').value.trim().toLowerCase();
+  if(tab==='pending'&&!q){$('liste').innerHTML=groupesHTML();return}
   // la recherche par code ou par téléphone cherche dans tous les services
   const l=items.filter(p=>q?((p.name||'')+' '+(p.code||'')+' '+(p.seller_name||'')+' '+(p.seller_phone||'')+' '+agTxt(p.code)).toLowerCase().includes(q):(tab==='pending'?p.status==='En attente':(p.section===tab&&p.status!=='En attente')));
   $('liste').innerHTML=l.length?l.map(p=>{
@@ -225,6 +260,47 @@ function afficher(){
     <div class="in"><b>${esc(p.name)}</b><div class="pr">${prixTxt(p)}</div><span class="code">${p.status==='En attente'?'⏳ EN ATTENTE':esc(p.code||'—')}</span>${p.ville?'<span class="sub">📍 '+esc(p.ville)+'</span>':''}${q?'<span class="sub">'+T.t+'</span>':''}${agN(p.code)?'<span class="sub">👷 '+agN(p.code)+'</span>':''}</div><div class="chev">›</div></div>`}).join('')
     :'<div class="empty z">'+(q?'Aucun résultat.':(tab==='pending'?'Aucun produit en attente':'Aucune marchandise'))+'</div>';
 }
+// ===== Fournisseurs en attente : une seule case par fournisseur =====
+const fkey=p=>tel(p.seller_phone).slice(-8)||('n:'+(p.seller_name||'?').toLowerCase());
+const fPar=p=>FOUR.find(f=>tel(f.phone).slice(-8)===tel(p.seller_phone).slice(-8)&&tel(p.seller_phone)&&(f.region===(p.region||'agadez')));
+function groupes(){const g={};items.filter(p=>p.status==='En attente').forEach(p=>{(g[fkey(p)+'|'+(p.region||'agadez')]=g[fkey(p)+'|'+(p.region||'agadez')]||[]).push(p)});return Object.values(g)}
+function groupesHTML(){
+  const G=groupes();if(!G.length)return '<div class="empty z">Aucun produit en attente</div>';
+  return G.map(l=>{const p=l[0],f=fPar(p),img=p.photo||p.image_url||(Array.isArray(p.photos)&&p.photos[0])||'';
+    return `<div class="it" data-fk="${esc(fkey(p)+'|'+(p.region||'agadez'))}"><div class="th">${img?`<img class="th" src="${esc(img)}" alt="" loading="lazy">`:'👤'}</div>
+    <div class="in"><b>👤 ${esc((f&&f.name)||p.seller_name||'Fournisseur')}</b><div class="pr">${l.length} produit${l.length>1?'s':''} en attente</div><span class="code">${f?'✅ FOURNISSEUR CONNU':'🆕 NOUVEAU'}</span><span class="sub">📞 ${esc(p.seller_phone||'—')}${p.ville?' · 📍 '+esc(p.ville):''}</span></div></div>`}).join('')}
+function ouvrirGroupe(k){
+  const l=items.filter(p=>p.status==='En attente'&&(fkey(p)+'|'+(p.region||'agadez'))===k);
+  if(!l.length){fermerDetail();afficher();return}
+  const p0=l[0],f=fPar(p0)||{};
+  $('db').innerHTML=`<div class="dc">👤 Fournisseur — ${l.length} produit${l.length>1?'s':''}</div>
+  <div class="vend"><h3>🔒 Informations du fournisseur ${f.id?'(déjà enregistré ✅)':'(nouveau — à enregistrer)'}</h3>
+  <label>Nom et prénom</label><input id="fn_n" value="${esc(f.name||p0.seller_name||'')}">
+  <label>Téléphone</label><input id="fn_t" type="tel" value="${esc(f.phone||p0.seller_phone||'')}">
+  <label>N° de la carte d'identité</label><input id="fn_c" value="${esc(f.id_card||'')}" placeholder="Numéro de la CNI">
+  <label>Adresse / quartier</label><input id="fn_a" value="${esc(f.address||'')}">
+  <label>Notes</label><input id="fn_o" value="${esc(f.notes||'')}">
+  <div class="btns" style="margin-top:8px"><button class="ok" id="fn_s" type="button">💾 Enregistrer le fournisseur</button>${tel(p0.seller_phone)?`<a class="call" href="tel:${tel(p0.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p0.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div><div class="msg" id="fn_m"></div></div>
+  ${l.map(p=>{const img=p.photo||p.image_url||(Array.isArray(p.photos)&&p.photos[0])||'';return `<div class="it" style="cursor:default"><div class="th">${img?`<img class="th" src="${esc(img)}" alt="" loading="lazy">`:'🛍️'}</div><div class="in"><b>${esc(p.name)}</b><div class="pr">${prixTxt(p)}</div>${Number(p.buy_price)>0?'<span class="sub">Achat : '+fmt(p.buy_price)+'</span>':''}<div class="btns" style="margin-top:6px"><button class="ok" data-gv="${esc(p.id)}" type="button">✅ Valider</button><button class="del" data-gr="${esc(p.id)}" type="button">❌ Refuser</button><button class="no" data-gd="${esc(p.id)}" type="button">Voir</button></div></div></div>`}).join('')}
+  <div class="btns"><button class="ok" id="fn_all" type="button">✅ Tout valider (${l.length})</button><button class="del" id="fn_rej" type="button">❌ Tout refuser</button></div><div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
+  $('ds').hidden=false;$('dno').onclick=fermerDetail;
+  const sauver=async()=>{const row={phone:$('fn_t').value.trim()||p0.seller_phone||'',name:$('fn_n').value.trim(),id_card:$('fn_c').value.trim(),address:$('fn_a').value.trim(),notes:$('fn_o').value.trim(),region:p0.region||'agadez'};
+    if(!row.phone)throw new Error('Le téléphone est nécessaire pour reconnaître ce fournisseur.');
+    const r=await api('/rest/v1/fournisseurs?on_conflict=phone,region',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=representation'}),body:JSON.stringify(row)});
+    const n=(r&&r[0])||row;FOUR=FOUR.filter(x=>x.id!==n.id&&!(x.phone===n.phone&&x.region===n.region));FOUR.push(n)};
+  $('fn_s').onclick=async()=>{try{await sauver();$('fn_m').textContent='✅ Fournisseur enregistré : il sera reconnu la prochaine fois.';afficher()}catch(e){$('fn_m').textContent='⚠️ '+e.message}};
+  const valider=async p=>{const code=prochainCode(p.region);const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify({status:'En stock',code})});Object.assign(p,(res&&res[0])||{status:'En stock',code});return code};
+  const refuser=async p=>{await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',headers:H({Prefer:'return=minimal'})});items=items.filter(x=>x.id!==p.id);
+    [p.photo,p.image_url,...(Array.isArray(p.photos)?p.photos:[])].filter(u=>u&&u.startsWith(R2_BASE)).forEach(u=>fetch(CF_UPLOAD_URL+'?key='+encodeURIComponent(u.slice(R2_BASE.length)),{method:'DELETE',headers:{Authorization:'Bearer '+tok}}).catch(()=>{}))};
+  const get=id=>l.find(x=>String(x.id)===String(id));
+  $('db').querySelectorAll('[data-gv]').forEach(b=>b.onclick=async()=>{try{const c=await valider(get(b.dataset.gv));toast('✅ '+c+' publié');afficher();ouvrirGroupe(k)}catch(e){toast('⚠️ '+e.message,4000)}});
+  $('db').querySelectorAll('[data-gr]').forEach(b=>b.onclick=async()=>{const p=get(b.dataset.gr);if(!confirm('Refuser « '+p.name+' » ?'))return;try{await refuser(p);toast('❌ Refusé');afficher();ouvrirGroupe(k)}catch(e){toast('⚠️ '+e.message,4000)}});
+  $('db').querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>ouvrirDetail(b.dataset.gd));
+  $('fn_all').onclick=async()=>{if(!confirm('Valider les '+l.length+' produits ?'))return;$('fn_all').disabled=true;let n=0;
+    try{try{await sauver()}catch(e){}for(const p of l){await valider(p);n++}toast('✅ '+n+' produits publiés');fermerDetail();afficher()}catch(e){toast('⚠️ '+e.message+' ('+n+' publiés)',4500);afficher();ouvrirGroupe(k)}};
+  $('fn_rej').onclick=async()=>{if(!confirm('Refuser et supprimer les '+l.length+' produits ?'))return;try{for(const p of l.slice())await refuser(p);toast('❌ Produits refusés');fermerDetail();afficher()}catch(e){toast('⚠️ '+e.message,4000);afficher()}};
+}
+$('liste').addEventListener('click',e=>{const c=e.target.closest('[data-fk]');if(c)ouvrirGroupe(c.dataset.fk)});
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;$('q').value='';afficher()}};
 $('q').oninput=afficher;
 
@@ -264,7 +340,7 @@ $('ano_').onclick=()=>{$('as').hidden=true;if(agFor)ouvrirDetail(agFor.id)};
 $('aok').onclick=async()=>{
   const nm=$('anm').value.trim();if(!nm){$('amsg').textContent="Écris le nom de l'agent.";return}
   $('aok').disabled=true;$('amsg').textContent='Enregistrement...';
-  try{const r=await api('/rest/v1/agents',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify({product_code:agFor.code,name:nm,phone:$('atl').value.trim(),id_card:$('aci').value.trim(),address:$('aad').value.trim(),notes:$('ano').value.trim()})});
+  try{const r=await api('/rest/v1/agents',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify({region:agFor.region||regActive()||'agadez',product_code:agFor.code,name:nm,phone:$('atl').value.trim(),id_card:$('aci').value.trim(),address:$('aad').value.trim(),notes:$('ano').value.trim()})});
     AG.unshift((r&&r[0])||{product_code:agFor.code,name:nm});$('as').hidden=true;afficher();toast('✅ Agent ajouté à '+agFor.code);ouvrirDetail(agFor.id)}
   catch(e){$('amsg').textContent='⚠️ '+(/relation.*agents|does not exist/i.test(e.message)?"Table agents absente":e.message)}
   $('aok').disabled=false};
@@ -347,13 +423,15 @@ function envoyer(blob,type,label){ // envoi vers Cloudflare avec barre de progre
   });
 }
 // code unique et simple : ODA-001, ODA-002...
-function prochainCode(){
-  const n=items.map(p=>{const m=/^ODA-(\d+)$/i.exec(p.code||'');return m?parseInt(m[1],10):0});
-  return 'ODA-'+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
+function prochainCode(r){
+  r=r||regActive()||'agadez';const pf=r==='agadez'?'ODA-':'ODA-'+r.slice(0,3).toUpperCase()+'-';
+  const n=items.filter(p=>p.code&&p.code.toUpperCase().startsWith(pf)).map(p=>{const m=/(\d+)$/.exec(p.code||'');return m?parseInt(m[1],10):0});
+  return pf+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
 }
 $('fok').onclick=async()=>{
-  const nom=$('fnom').value.trim(),sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=pv===''?0:parseFloat(pv);
-  if(!nom){$('fmsg').textContent='Remplis le premier champ.';return}
+  let nom=$('fnom').value.trim();const sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=pv===''?0:parseFloat(pv);
+  if(!nom&&!S.po){$('fmsg').textContent='Remplis le premier champ.';return}
+  if(S.po&&!photoList.length){$('fmsg').textContent='Ajoute au moins une photo du véhicule (jusqu\'à 5).';return}
   if(S.typ&&!$('ftyp').value){$('fmsg').textContent="Choisis le type d'annonce.";return}
   if(S.prix&&!(vente>0)){$('fmsg').textContent='Écris le prix de vente.';return}
   if(!(vente>=0)){$('fmsg').textContent='Prix invalide.';return}
@@ -364,14 +442,15 @@ $('fok').onclick=async()=>{
     const photo=urls[0]||'';
     if(videoFile&&S.vid)video=await envoyer(videoFile,videoFile.type||'video/mp4','Envoi de la vidéo');
     if(edit){ // modification : on ne change la photo/vidéo que si une nouvelle a été choisie
+      if(!nom)nom=edit.name||('Véhicule '+(edit.code||''));
       const ch={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),section:sec,sous_categorie:S.typ?$('ftyp').value:null};
       ch.photo=photo;ch.image_url=photo||null;ch.photos=urls;if(video)ch.video_url=video;
       const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(edit.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(ch)});
       Object.assign(edit,(res&&res[0])||ch);tab=sec;afficher();$('fs').hidden=true;toast('✅ '+(edit.code||'Annonce')+' modifiée');
     }else{
-    const code=prochainCode();
+    const code=prochainCode();if(!nom)nom='Véhicule '+code;
     const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:0,photo:photo,image_url:photo||null,photos:urls,video_url:video||null,
-      seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),code,section:sec,sous_categorie:S.typ?$('ftyp').value:null,region:'agadez',status:'En stock',quantite:1,stock:100};
+      seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),code,section:sec,sous_categorie:S.typ?$('ftyp').value:null,region:regActive()||'agadez',status:'En stock',quantite:1,stock:100};
     const res=await api('/rest/v1/products',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(row)});
     items.unshift((res&&res[0])||row);tab=sec;$('q').value='';afficher();$('fs').hidden=true;toast('✅ '+code+' ajouté');
     }
@@ -382,7 +461,7 @@ $('fok').onclick=async()=>{
 // ===== Connexion administrateur =====
 function ouvrirLogin(){$('lmsg').textContent='';$('ls').hidden=false}
 $('lg').onclick=()=>{
-  if(tok){tok=null;mail='';try{localStorage.removeItem('oda_admin')}catch(e){}head();charger();toast('Déconnecté');return}
+  if(tok){tok=null;mail='';MYREG=null;SUPER=false;RF='';$('team').hidden=true;$('regbar').innerHTML='';try{localStorage.removeItem('oda_admin')}catch(e){}head();charger();toast('Déconnecté');return}
   ouvrirLogin();
 };
 $('out').onclick=()=>$('lg').click();
@@ -393,11 +472,11 @@ $('lok').onclick=async()=>{
     const r=await api('/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({email:$('lmail').value.trim(),password:$('lpass').value})});
     tok=r.access_token;mail=(r.user&&r.user.email)||$('lmail').value.trim();
     try{localStorage.setItem('oda_admin',JSON.stringify({tok,mail,exp:Date.now()+(r.expires_in||3600)*1000-60000}))}catch(e){}
-    $('ls').hidden=true;$('lpass').value='';head();charger();toast('✅ Connecté');
+    $('ls').hidden=true;$('lpass').value='';head();await chargerProfil();charger();toast('✅ Connecté');
   }catch(err){$('lmsg').textContent=/refusé|invalid|Erreur 400/i.test(err.message)?'E-mail ou mot de passe incorrect.':'⚠️ '+err.message}
   $('lok').disabled=false;
 };
-head();charger();if(!tok)ouvrirLogin();
+head();chargerProfil().then(charger);if(!tok)ouvrirLogin();
 </script>
 </body>
 </html>
