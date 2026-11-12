@@ -128,7 +128,7 @@ textarea{min-height:60px;resize:vertical}
   <input type="file" id="fvf" accept="video/*" hidden></div>
   <label id="fvl">Vendeur</label><input id="fven" placeholder="Nom du vendeur">
   <label id="ftl">Téléphone du vendeur</label><input id="ftel" type="tel" placeholder="">
-  <div style="font-size:10.5px;color:#8a8a8a;margin-top:4px">🔒 Nom et téléphone ne sont visibles que dans cette page, jamais par les clients.</div>
+  <div id="sellnote" style="font-size:10.5px;color:#8a8a8a;margin-top:4px">🔒 Nom et téléphone ne sont visibles que dans cette page, jamais par les clients.</div>
   <div id="abox" hidden><label>Quartier *</label><input id="fquart" placeholder="">
   <label>Sa photo (pour l'identifier) *</label><div class="ths" id="pth"></div>
   <div class="pick"><label class="p" for="pfile">🙂 Photo de la personne</label></div>
@@ -196,6 +196,8 @@ const SECTIONS=[
   nl:'Type de gaz (marque et poids) *',np:'',pl:'Prix de la bouteille (FCFA) *',dl:'Détails (facultatif)',dp:'',v:'Fournisseur',tl:'Téléphone'},
  {k:'patisserie', t:'Pâtisserie',          e:'🎂',prix:1,max:3,
   nl:'Gâteau / produit *',np:'',pl:'Prix (FCFA) *',dl:'Détails (facultatif)',dp:'',v:'Pâtissier',tl:'Téléphone'},
+ {k:'annonce',    t:'Annonces du panier',  e:'📢',vid:1,ann:1,max:1,
+  nl:"Titre de l'annonce *",np:'',pl:'',dl:'Texte sous la vidéo (facultatif)',dp:'',v:'',tl:''},
  {k:'transport',  t:'Transport',           e:'🚚',art:1,typ:1,max:3,
   nl:'Véhicule / trajet *',np:'',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'',v:'Transporteur',tl:'Téléphone du transporteur'}];
 let FOUR=[],MYREG=null,SUPER=false,REGS=[],RF='',tok=null,mail='',tab='pending',items=[],photoList=[],videoFile=null; // photoList : {url} déjà en ligne ou {blob,prev} nouvelle
@@ -259,7 +261,7 @@ async function charger(){
 }
 const agN=c=>AG.filter(a=>a.product_code===c).length,agTxt=c=>AG.filter(a=>a.product_code===c).map(a=>(a.name||'')+' '+(a.phone||'')+' '+(a.id_card||'')).join(' ');
 const ACT={boutique:[['+ Ajouter produit neuf']],marketplace:[['+ Ajouter annonce occasion']],automobile:[['+ Ajouter un véhicule']],vivrier:[['+ Ajouter produit vivrier']],
- immobilier:[['+ Maison à vendre','vente'],['+ Maison à louer','location'],['+ Boutique à vendre','boutique_vente'],['+ Boutique à louer','boutique_location'],['+ Terrain à vendre','terrain']],travaux:[['+ Ajouter un artisan']],colis:[['+ Ajouter une offre colis']],transport:[['+ Gros camion','camion'],['+ Moto à 3 roues','moto']],longrich:[['+ Produit Longrich']],gaz:[['+ Produit gaz']],patisserie:[['+ Gâteau / pâtisserie']]};
+ immobilier:[['+ Maison à vendre','vente'],['+ Maison à louer','location'],['+ Boutique à vendre','boutique_vente'],['+ Boutique à louer','boutique_location'],['+ Terrain à vendre','terrain']],travaux:[['+ Ajouter un artisan']],colis:[['+ Ajouter une offre colis']],transport:[['+ Gros camion','camion'],['+ Moto à 3 roues','moto']],longrich:[['+ Produit Longrich']],gaz:[['+ Produit gaz']],patisserie:[['+ Gâteau / pâtisserie']],annonce:[['+ Ajouter une annonce vidéo']]};
 function afficher(){
   const att=items.filter(p=>p.status==='En attente');
   $('tabs').innerHTML=`<button class="tab${tab==='pending'?' on':''}" data-t="pending">⏳ En attente (${att.length})</button>`+SECTIONS.map(s=>`<button class="tab${s.k===tab?' on':''}" data-t="${s.k}">${s.e} ${s.t} (${items.filter(p=>p.section===s.k&&p.status!=='En attente').length})</button>`).join('');
@@ -384,8 +386,9 @@ function majForm(){
   const S=SECTIONS.find(s=>s.k===$('fsec').value)||SECTIONS[0];
   $('fnl').textContent=S.nl;$('fnom').placeholder=S.np;$('fpl').textContent=S.pl;$('fdl').textContent=S.dl;$('fdesc').placeholder=S.dp;
   $('fvl').textContent=S.v;$('ftl').textContent=S.tl;$('tbox').style.display=S.typ?'':'none';$('ftyp').innerHTML=S.k==='transport'?TR_OPTS:IMMO_OPTS;$('vbox').style.display=S.vid?'':'none';
-  $('pbox').style.display=S.art?'none':'';$('abox').hidden=!S.art;
-  $('fpt').textContent=S.max>1?"Photos (jusqu'à "+S.max+", la 1re est la photo principale)":'Photo';
+  $('pbox').style.display=S.art||S.ann?'none':'';$('abox').hidden=!S.art;
+  ['fvl','fven','ftl','ftel'].forEach(i=>$(i).style.display=S.ann?'none':'');$('sellnote').style.display=S.ann?'none':'';
+  $('fpt').textContent=S.ann?'Image de couverture de la vidéo (facultatif)':S.max>1?"Photos (jusqu'à "+S.max+", la 1re est la photo principale)":'Photo';
 }
 let cardBlob=null,cardUrl='',persBlob=null,persUrl='';
 function majPers(){const u=persBlob?URL.createObjectURL(persBlob):persUrl;$('pth').innerHTML=u?'<div class="tb"><img src="'+esc(u)+'" alt=""><i>PERSONNE</i></div>':''}
@@ -456,6 +459,7 @@ $('fok').onclick=async()=>{
   if(!nom&&!S.po){$('fmsg').textContent='Remplis le premier champ.';return}
   if(S.po&&!photoList.length){$('fmsg').textContent='Ajoute au moins une photo du véhicule (jusqu\'à 5).';return}
   if(S.art){if(!persBlob&&!persUrl){$('fmsg').textContent="Ajoute la photo de la personne (pour l'identifier).";return}if(!cardBlob&&!cardUrl){$('fmsg').textContent="Ajoute la photo de sa carte d'identité.";return}if(!$('fquart').value.trim()){$('fmsg').textContent="Écris le quartier de l'artisan.";return}}
+  if(S.ann&&!videoFile&&!(edit&&edit.video_url)){$('fmsg').textContent="Ajoute la vidéo de l'annonce.";return}
   if(S.typ&&!$('ftyp').value){$('fmsg').textContent="Choisis le type d'annonce.";return}
   if(S.prix&&!(vente>0)){$('fmsg').textContent='Écris le prix de vente.';return}
   if(!(vente>=0)||!(achat>=0)){$('fmsg').textContent='Prix invalide.';return}
