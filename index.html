@@ -116,8 +116,8 @@ textarea{min-height:60px;resize:vertical}
   <select id="fsec" hidden></select>
   <div id="tbox"><label>Type d'annonce *</label><select id="ftyp"><option value="">Choisis...</option><option value="terrain">🏞️ Acheter un terrain</option><option value="vente">🏠 Maison à vendre</option><option value="location">🏠 Maison à louer</option><option value="boutique_vente">🏪 Boutique à vendre</option><option value="boutique_location">🏪 Boutique à louer</option></select></div>
   <label id="fnl">Nom *</label><input id="fnom" placeholder="">
-  <label>Prix d'achat (FCFA) — privé, jamais visible par les clients</label><input id="fachat" type="number" inputmode="numeric" placeholder="">
-  <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="">
+  <div id="pbox"><label>Prix d'achat (FCFA) — privé, jamais visible par les clients</label><input id="fachat" type="number" inputmode="numeric" placeholder="">
+  <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder=""></div>
   <label id="fdl">Description (facultatif)</label><textarea id="fdesc" placeholder=""></textarea>
   <label id="fpt">Photos (jusqu'à 6, la 1re est la photo principale)</label>
   <div class="ths" id="ths"></div>
@@ -129,6 +129,10 @@ textarea{min-height:60px;resize:vertical}
   <label id="fvl">Vendeur</label><input id="fven" placeholder="Nom du vendeur">
   <label id="ftl">Téléphone du vendeur</label><input id="ftel" type="tel" placeholder="">
   <div style="font-size:10.5px;color:#8a8a8a;margin-top:4px">🔒 Nom et téléphone ne sont visibles que dans cette page, jamais par les clients.</div>
+  <div id="abox" hidden><label>Quartier de l'artisan *</label><input id="fquart" placeholder="">
+  <label>Photo de la carte d'identité *</label><div class="ths" id="cth"></div>
+  <div class="pick"><label class="p" for="cfile">🪪 Photo de la carte d'identité</label></div>
+  <input type="file" id="cfile" accept="image/*" hidden></div>
   <div class="bar" id="bar" hidden><i id="bari"></i></div>
   <div class="msg" id="fmsg"></div>
   <div class="btns"><button class="no" id="fno" type="button">Annuler</button><button class="ok" id="fok" type="button">Enregistrer</button></div>
@@ -179,7 +183,7 @@ const SECTIONS=[
   nl:'Produit *',np:'',pl:'Prix (FCFA) *',dl:'Quantité, origine (facultatif)',dp:'',v:'Fournisseur / agriculteur',tl:'Téléphone du fournisseur'},
  {k:'immobilier', t:'Immobilier',          e:'🏢',vid:1,typ:1,max:6,
   nl:'Titre de l\'annonce *',np:'',pl:'Prix (FCFA) - vide = « Sur devis »',dl:'Quartier, surface, nombre de pièces...',dp:'',v:'Propriétaire / agent',tl:'Téléphone du propriétaire'},
- {k:'travaux',    t:'Travaux à domicile',  e:'🛠️',max:3,
+ {k:'travaux',    t:'Travaux à domicile',  e:'🛠️',art:1,max:1,
   nl:'Métier *',np:'',pl:'Tarif indicatif (FCFA) - vide = « Sur devis »',dl:'Ce que fait l\'artisan (facultatif)',dp:'',v:'Nom de l\'artisan',tl:'Téléphone de l\'artisan'},
  {k:'colis',      t:'Service colis',       e:'📦',max:3,
   nl:'Nom de l\'offre *',np:'',pl:'Tarif (FCFA) - vide = « Sur devis »',dl:'Détails (facultatif)',dp:'',v:'Responsable',tl:'Téléphone du responsable'},
@@ -324,7 +328,7 @@ function ouvrirDetail(id){
   const d=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'';
   $('db').innerHTML=media+`<span class="code" style="font-size:13px">${esc(p.code||'—')}</span><div class="dc">${esc(p.name)}</div><div class="pr" style="font-size:16px">${prixTxt(p)}</div>
   ${kv('Service',T.e+' '+T.t)}${kv('Type',TYPN[p.sous_categorie]||'')}${kv('Description',p.description)+(Number(p.buy_price)>0&&p.status!=='En attente'?kv('Prix d\'achat',fmt(p.buy_price)):'')+(Number(p.buy_price)>0&&Number(p.sell_price)>0?kv('Bénéfice',fmt(p.sell_price-p.buy_price)):'')}${p.status==='En attente'?kv('Ville',p.ville||'')+kv('Prix d\'achat (fournisseur)',Number(p.buy_price)>0?fmt(p.buy_price):'')+kv('Statut','⏳ En attente de confirmation'):''}${kv('Ajouté le',d)}
-  <div class="vend"><h3>🔒 Vendeur (privé)</h3>${kv('Nom',p.seller_name||'—')}${kv('Téléphone',p.seller_phone||'—')}
+  <div class="vend"><h3>🔒 Vendeur (privé)</h3>${kv('Nom',p.seller_name||'—')}${kv('Téléphone',p.seller_phone||'—')}${p.quartier?kv('Quartier',p.quartier):''}${p.id_card_photo?'<div style="margin-top:8px;font-size:12px;color:#8a8a8a">Carte d\'identité</div><a href="'+esc(p.id_card_photo)+'" target="_blank" rel="noopener"><img class="media" style="max-height:200px;object-fit:contain" src="'+esc(p.id_card_photo)+'" alt=""></a>':''}
   ${tel(p.seller_phone)?`<div class="btns"><a class="call" href="tel:${tel(p.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
   ${agentsHTML(p)}
   ${p.status==='En attente'?'<div class="btns"><button class="ok" id="dapp" type="button">✅ Approuver et publier</button><button class="del" id="dref" type="button">❌ Refuser</button></div>':''}
@@ -377,8 +381,12 @@ function majForm(){
   const S=SECTIONS.find(s=>s.k===$('fsec').value)||SECTIONS[0];
   $('fnl').textContent=S.nl;$('fnom').placeholder=S.np;$('fpl').textContent=S.pl;$('fdl').textContent=S.dl;$('fdesc').placeholder=S.dp;
   $('fvl').textContent=S.v;$('ftl').textContent=S.tl;$('tbox').style.display=S.typ?'':'none';$('ftyp').innerHTML=S.k==='transport'?TR_OPTS:IMMO_OPTS;$('vbox').style.display=S.vid?'':'none';
-  $('fpt').textContent=S.max>1?"Photos (jusqu'à "+S.max+", la 1re est la photo principale)":'Photo';
+  $('pbox').style.display=S.art?'none':'';$('abox').hidden=!S.art;document.querySelector('label[for=ffile]').textContent=S.art?"📷 Photo de l'artisan":"📷 Ajouter des photos (appuie plusieurs fois pour en ajouter d'autres)";
+  $('fpt').textContent=S.art?"Photo de l'artisan *":S.max>1?"Photos (jusqu'à "+S.max+", la 1re est la photo principale)":'Photo';
 }
+let cardBlob=null,cardUrl='';
+function majCard(){const u=cardBlob?URL.createObjectURL(cardBlob):cardUrl;$('cth').innerHTML=u?'<div class="tb"><img src="'+esc(u)+'" alt=""><i>CARTE</i></div>':''}
+$('cfile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{cardBlob=await reduire(f);majCard()}catch(err){$('fmsg').textContent='Photo illisible, essaie une autre.'}};
 let edit=null; // annonce en cours de modification (null = nouvelle)
 function ouvrirForm(p){
   edit=p||null;
@@ -386,6 +394,7 @@ function ouvrirForm(p){
   $('fh').textContent=edit?'Modifier '+(edit.code||'l\'annonce'):'Ajouter une annonce';$('fok').textContent=edit?'Enregistrer les changements':'Enregistrer';
   $('ftyp').value=edit?edit.sous_categorie||'':'';$('fnom').value=edit?edit.name||'':'';$('fvente').value=edit&&Number(edit.sell_price||edit.price)>0?(edit.sell_price||edit.price):'';$('fachat').value=edit&&Number(edit.buy_price)>0?edit.buy_price:'';
   $('fdesc').value=edit?edit.description||'':'';$('fven').value=edit?edit.seller_name||'':'';$('ftel').value=edit?edit.seller_phone||'':'';
+  $('fquart').value=edit?edit.quartier||'':'';cardBlob=null;cardUrl=edit?edit.id_card_photo||'':'';majCard();
   videoFile=null;$('ffile').value='';$('fvf').value='';$('fmsg').textContent='';$('bar').hidden=true;
   photoList=edit?((Array.isArray(edit.photos)&&edit.photos.length?edit.photos:[edit.photo||edit.image_url]).filter(Boolean).map(url=>({url}))):[];majThumbs();
   $('vv').hidden=!(edit&&edit.video_url);if(edit&&edit.video_url)$('vv').src=edit.video_url;
@@ -438,9 +447,10 @@ function prochainCode(r){
   return pf+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
 }
 $('fok').onclick=async()=>{
-  let nom=$('fnom').value.trim();const sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=pv===''?0:parseFloat(pv),pa=$('fachat').value.trim(),achat=pa===''?0:parseFloat(pa);
+  let nom=$('fnom').value.trim();const sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=S.art?(edit&&Number(edit.sell_price)>0?Number(edit.sell_price):0):(pv===''?0:parseFloat(pv)),pa=$('fachat').value.trim(),achat=S.art?(edit&&Number(edit.buy_price)>0?Number(edit.buy_price):0):(pa===''?0:parseFloat(pa));
   if(!nom&&!S.po){$('fmsg').textContent='Remplis le premier champ.';return}
   if(S.po&&!photoList.length){$('fmsg').textContent='Ajoute au moins une photo du véhicule (jusqu\'à 5).';return}
+  if(S.art){if(!photoList.length){$('fmsg').textContent="Ajoute la photo de l'artisan.";return}if(!cardBlob&&!cardUrl){$('fmsg').textContent="Ajoute la photo de sa carte d'identité.";return}if(!$('fquart').value.trim()){$('fmsg').textContent="Écris le quartier de l'artisan.";return}}
   if(S.typ&&!$('ftyp').value){$('fmsg').textContent="Choisis le type d'annonce.";return}
   if(S.prix&&!(vente>0)){$('fmsg').textContent='Écris le prix de vente.';return}
   if(!(vente>=0)||!(achat>=0)){$('fmsg').textContent='Prix invalide.';return}
@@ -448,11 +458,13 @@ $('fok').onclick=async()=>{
   try{
     let video='';const urls=[];
     for(let i=0;i<photoList.length;i++){const x=photoList[i];urls.push(x.url||await envoyer(x.blob,'image/jpeg','Envoi photo '+(i+1)+'/'+photoList.length))}
-    const photo=urls[0]||'';
+    const photo=urls[0]||'';let carte=cardUrl;
+    if(S.art&&cardBlob)carte=await envoyer(cardBlob,'image/jpeg','Envoi carte d\'identité');
     if(videoFile&&S.vid)video=await envoyer(videoFile,videoFile.type||'video/mp4','Envoi de la vidéo');
     if(edit){ // modification : on ne change la photo/vidéo que si une nouvelle a été choisie
       if(!nom)nom=edit.name||('Véhicule '+(edit.code||''));
       const ch={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:achat,seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),section:sec,sous_categorie:S.typ?$('ftyp').value:null};
+      if(S.art){ch.quartier=$('fquart').value.trim();ch.id_card_photo=carte}
       ch.photo=photo;ch.image_url=photo||null;ch.photos=urls;if(video)ch.video_url=video;
       const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(edit.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(ch)});
       Object.assign(edit,(res&&res[0])||ch);tab=sec;afficher();$('fs').hidden=true;toast('✅ '+(edit.code||'Annonce')+' modifiée');
@@ -460,6 +472,7 @@ $('fok').onclick=async()=>{
     const code=prochainCode();if(!nom)nom='Véhicule '+code;
     const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:achat,photo:photo,image_url:photo||null,photos:urls,video_url:video||null,
       seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),code,section:sec,sous_categorie:S.typ?$('ftyp').value:null,region:regActive()||'agadez',status:'En stock',quantite:1,stock:100};
+    if(S.art){row.quartier=$('fquart').value.trim();row.id_card_photo=carte}
     const res=await api('/rest/v1/products',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(row)});
     items.unshift((res&&res[0])||row);tab=sec;$('q').value='';afficher();$('fs').hidden=true;toast('✅ '+code+' ajouté');
     }
