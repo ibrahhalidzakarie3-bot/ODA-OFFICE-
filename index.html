@@ -116,6 +116,7 @@ textarea{min-height:60px;resize:vertical}
   <select id="fsec" hidden></select>
   <div id="tbox"><label>Type d'annonce *</label><select id="ftyp"><option value="">Choisis...</option><option value="terrain">🏞️ Acheter un terrain</option><option value="vente">🏠 Maison à vendre</option><option value="location">🏠 Maison à louer</option><option value="boutique_vente">🏪 Boutique à vendre</option><option value="boutique_location">🏪 Boutique à louer</option></select></div>
   <label id="fnl">Nom *</label><input id="fnom" placeholder="">
+  <label>Prix d'achat (FCFA) — privé, jamais visible par les clients</label><input id="fachat" type="number" inputmode="numeric" placeholder="">
   <label id="fpl">Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="">
   <label id="fdl">Description (facultatif)</label><textarea id="fdesc" placeholder=""></textarea>
   <label id="fpt">Photos (jusqu'à 6, la 1re est la photo principale)</label>
@@ -172,7 +173,7 @@ const SECTIONS=[
   nl:'Nom du produit *',np:'',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Vendeur / fournisseur',tl:'Téléphone du vendeur'},
  {k:'marketplace',t:"Produits d'occasion", e:'♻️',prix:1,max:6,
   nl:'Nom du produit *',np:'',pl:'Prix demandé (FCFA) *',dl:'État et détails',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
- {k:'automobile', t:'Automobile',          e:'🚗',prix:1,max:5,
+ {k:'automobile', t:'Automobile',          e:'🚗',prix:1,vid:1,max:5,
   nl:'Nom du produit *',np:'',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
  {k:'vivrier',    t:'Produits vivriers',   e:'🌾',prix:1,max:3,
   nl:'Produit *',np:'',pl:'Prix (FCFA) *',dl:'Quantité, origine (facultatif)',dp:'',v:'Fournisseur / agriculteur',tl:'Téléphone du fournisseur'},
@@ -322,7 +323,7 @@ function ouvrirDetail(id){
   const media=p.video_url?`<video class="media" src="${esc(p.video_url)}" ${img?'poster="'+esc(img)+'"':''} controls playsinline preload="metadata"></video>`:(ph.length?`<div style="display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory">${ph.map(u=>`<img class="media" style="flex:0 0 ${ph.length>1?'88%':'100%'};scroll-snap-align:center" src="${esc(u)}" alt="">`).join('')}</div>`:'');
   const d=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'';
   $('db').innerHTML=media+`<span class="code" style="font-size:13px">${esc(p.code||'—')}</span><div class="dc">${esc(p.name)}</div><div class="pr" style="font-size:16px">${prixTxt(p)}</div>
-  ${kv('Service',T.e+' '+T.t)}${kv('Type',TYPN[p.sous_categorie]||'')}${kv('Description',p.description)}${p.status==='En attente'?kv('Ville',p.ville||'')+kv('Prix d\'achat (fournisseur)',Number(p.buy_price)>0?fmt(p.buy_price):'')+kv('Statut','⏳ En attente de confirmation'):''}${kv('Ajouté le',d)}
+  ${kv('Service',T.e+' '+T.t)}${kv('Type',TYPN[p.sous_categorie]||'')}${kv('Description',p.description)+(Number(p.buy_price)>0&&p.status!=='En attente'?kv('Prix d\'achat',fmt(p.buy_price)):'')+(Number(p.buy_price)>0&&Number(p.sell_price)>0?kv('Bénéfice',fmt(p.sell_price-p.buy_price)):'')}${p.status==='En attente'?kv('Ville',p.ville||'')+kv('Prix d\'achat (fournisseur)',Number(p.buy_price)>0?fmt(p.buy_price):'')+kv('Statut','⏳ En attente de confirmation'):''}${kv('Ajouté le',d)}
   <div class="vend"><h3>🔒 Vendeur (privé)</h3>${kv('Nom',p.seller_name||'—')}${kv('Téléphone',p.seller_phone||'—')}
   ${tel(p.seller_phone)?`<div class="btns"><a class="call" href="tel:${tel(p.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
   ${agentsHTML(p)}
@@ -383,7 +384,7 @@ function ouvrirForm(p){
   edit=p||null;
   $('fsec').innerHTML=SECTIONS.map(s=>`<option value="${s.k}">${s.e} ${s.t}</option>`).join('');$('fsec').value=edit?edit.section:tab;majForm();
   $('fh').textContent=edit?'Modifier '+(edit.code||'l\'annonce'):'Ajouter une annonce';$('fok').textContent=edit?'Enregistrer les changements':'Enregistrer';
-  $('ftyp').value=edit?edit.sous_categorie||'':'';$('fnom').value=edit?edit.name||'':'';$('fvente').value=edit&&Number(edit.sell_price||edit.price)>0?(edit.sell_price||edit.price):'';
+  $('ftyp').value=edit?edit.sous_categorie||'':'';$('fnom').value=edit?edit.name||'':'';$('fvente').value=edit&&Number(edit.sell_price||edit.price)>0?(edit.sell_price||edit.price):'';$('fachat').value=edit&&Number(edit.buy_price)>0?edit.buy_price:'';
   $('fdesc').value=edit?edit.description||'':'';$('fven').value=edit?edit.seller_name||'':'';$('ftel').value=edit?edit.seller_phone||'':'';
   videoFile=null;$('ffile').value='';$('fvf').value='';$('fmsg').textContent='';$('bar').hidden=true;
   photoList=edit?((Array.isArray(edit.photos)&&edit.photos.length?edit.photos:[edit.photo||edit.image_url]).filter(Boolean).map(url=>({url}))):[];majThumbs();
@@ -437,12 +438,12 @@ function prochainCode(r){
   return pf+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
 }
 $('fok').onclick=async()=>{
-  let nom=$('fnom').value.trim();const sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=pv===''?0:parseFloat(pv);
+  let nom=$('fnom').value.trim();const sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec),pv=$('fvente').value.trim(),vente=pv===''?0:parseFloat(pv),pa=$('fachat').value.trim(),achat=pa===''?0:parseFloat(pa);
   if(!nom&&!S.po){$('fmsg').textContent='Remplis le premier champ.';return}
   if(S.po&&!photoList.length){$('fmsg').textContent='Ajoute au moins une photo du véhicule (jusqu\'à 5).';return}
   if(S.typ&&!$('ftyp').value){$('fmsg').textContent="Choisis le type d'annonce.";return}
   if(S.prix&&!(vente>0)){$('fmsg').textContent='Écris le prix de vente.';return}
-  if(!(vente>=0)){$('fmsg').textContent='Prix invalide.';return}
+  if(!(vente>=0)||!(achat>=0)){$('fmsg').textContent='Prix invalide.';return}
   $('fok').disabled=true;$('fmsg').textContent='Enregistrement...';
   try{
     let video='';const urls=[];
@@ -451,13 +452,13 @@ $('fok').onclick=async()=>{
     if(videoFile&&S.vid)video=await envoyer(videoFile,videoFile.type||'video/mp4','Envoi de la vidéo');
     if(edit){ // modification : on ne change la photo/vidéo que si une nouvelle a été choisie
       if(!nom)nom=edit.name||('Véhicule '+(edit.code||''));
-      const ch={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),section:sec,sous_categorie:S.typ?$('ftyp').value:null};
+      const ch={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:achat,seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),section:sec,sous_categorie:S.typ?$('ftyp').value:null};
       ch.photo=photo;ch.image_url=photo||null;ch.photos=urls;if(video)ch.video_url=video;
       const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(edit.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(ch)});
       Object.assign(edit,(res&&res[0])||ch);tab=sec;afficher();$('fs').hidden=true;toast('✅ '+(edit.code||'Annonce')+' modifiée');
     }else{
     const code=prochainCode();if(!nom)nom='Véhicule '+code;
-    const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:0,photo:photo,image_url:photo||null,photos:urls,video_url:video||null,
+    const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:achat,photo:photo,image_url:photo||null,photos:urls,video_url:video||null,
       seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),code,section:sec,sous_categorie:S.typ?$('ftyp').value:null,region:regActive()||'agadez',status:'En stock',quantite:1,stock:100};
     const res=await api('/rest/v1/products',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(row)});
     items.unshift((res&&res[0])||row);tab=sec;$('q').value='';afficher();$('fs').hidden=true;toast('✅ '+code+' ajouté');
