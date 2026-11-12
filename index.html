@@ -342,11 +342,13 @@ function ouvrirDetail(id){
   $('dno').onclick=fermerDetail;
   if($('dapp')){$('dapp').onclick=()=>approuver(p);$('dref').onclick=()=>supprimer(p,true)}
   $('ddel').onclick=()=>supprimer(p);
-  $('dag').onclick=()=>{fermerDetail();ouvrirAgent(p)};
+  if($('dag'))$('dag').onclick=()=>{fermerDetail();ouvrirAgent(p)};
+  if(p.section==='annonce')$('db').querySelectorAll('.vend').forEach(e=>e.remove());
   $('db').querySelectorAll('[data-agdel]').forEach(b=>b.onclick=()=>supprAgent(b.dataset.agdel,p));
   $('dmod').onclick=()=>{fermerDetail();ouvrirForm(p)};
 }
 function agentsHTML(p){
+  if(p.section==='annonce')return '';
   const l=AG.filter(a=>a.product_code===p.code);
   return `<div class="vend"><h3>👷 Agents attribués à ${esc(p.code||'')} (${l.length})</h3>`+(l.length?l.map(a=>`<div style="border-bottom:1px solid #262626;padding:8px 0">
     <div style="font-weight:800;font-size:14px">${esc(a.name)}</div>${kv('Téléphone',a.phone||'—')}${kv("N° carte d'identité",a.id_card||'—')}${kv('Adresse',a.address||'')}${kv('Notes',a.notes||'')}
