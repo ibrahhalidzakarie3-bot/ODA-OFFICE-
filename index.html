@@ -182,7 +182,7 @@ const SECTIONS=[
   nl:'Nom du produit *',np:'',pl:'Prix demandé (FCFA) *',dl:'État et détails',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
  {k:'automobile', t:'Automobile',          e:'🚗',prix:1,vid:1,max:5,
   nl:'Nom du produit *',np:'',pl:'Prix de vente (FCFA) *',dl:'Description (facultatif)',dp:'',v:'Propriétaire',tl:'Téléphone du propriétaire'},
- {k:'vivrier',    t:'Produits vivriers',   e:'🌾',prix:1,max:3,
+ {k:'vivrier',    t:'Alimentation',   e:'🌾',prix:1,max:3,
   nl:'Produit *',np:'',pl:'Prix (FCFA) *',dl:'Quantité, origine (facultatif)',dp:'',v:'Fournisseur / agriculteur',tl:'Téléphone du fournisseur'},
  {k:'immobilier', t:'Immobilier',          e:'🏢',vid:1,typ:1,max:6,
   nl:'Titre de l\'annonce *',np:'',pl:'Prix (FCFA) - vide = « Sur devis »',dl:'Quartier, surface, nombre de pièces...',dp:'',v:'Propriétaire / agent',tl:'Téléphone du propriétaire'},
@@ -337,11 +337,18 @@ function ouvrirDetail(id){
   ${tel(p.seller_phone)?`<div class="btns"><a class="call" href="tel:${tel(p.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
   ${agentsHTML(p)}
   ${p.status==='En attente'?'<div class="btns"><button class="ok" id="dapp" type="button">✅ Approuver et publier</button><button class="del" id="dref" type="button">❌ Refuser</button></div>':''}
-  <div class="btns"><button class="ok" id="dmod" type="button">✏️ Modifier</button><button class="del" id="ddel" type="button">Supprimer</button></div><div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
+  ${p.section!=='annonce'&&p.status==='En stock'?'<div class="btns" style="margin-bottom:8px"><button class="ok" id="dnotif" type="button">🔔 Notifier les clients</button></div>':''}<div class="btns"><button class="ok" id="dmod" type="button">✏️ Modifier</button><button class="del" id="ddel" type="button">Supprimer</button></div><div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
   $('ds').hidden=false;
   $('dno').onclick=fermerDetail;
   if($('dapp')){$('dapp').onclick=()=>approuver(p);$('dref').onclick=()=>supprimer(p,true)}
   $('ddel').onclick=()=>supprimer(p);
+  if($('dnotif'))$('dnotif').onclick=async()=>{
+    if(!confirm('Envoyer une notification à tous les clients pour « '+p.name+' » ?'))return;
+    $('dnotif').disabled=true;
+    try{const r=await fetch(URL_+'/functions/v1/send-push',{method:'POST',headers:H({'Content-Type':'application/json'}),body:JSON.stringify({product_id:p.id})});const j=await r.json();
+      if(!r.ok)throw new Error(j.error||'Erreur');toast('🔔 Envoyée à '+j.sent+' client'+(j.sent>1?'s':'')+(j.total?' sur '+j.total:''))}
+    catch(e){toast('⚠️ '+e.message)}
+    $('dnotif').disabled=false};
   if($('dag'))$('dag').onclick=()=>{fermerDetail();ouvrirAgent(p)};
   if(p.section==='annonce')$('db').querySelectorAll('.vend').forEach(e=>e.remove());
   $('db').querySelectorAll('[data-agdel]').forEach(b=>b.onclick=()=>supprAgent(b.dataset.agdel,p));
