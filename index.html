@@ -292,19 +292,29 @@ function afficher(){
 // ===== Clients inscrits pour publier des vidéos =====
 const handle=n=>'@'+(String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'client');
 function clientsHTML(q){
-  const l=CL.filter(c=>!q||((c.name||'')+' '+handle(c.name)+' '+(c.phone||'')).toLowerCase().includes(q));
+  const codes=c=>items.filter(p=>p.client_id===c.id&&p.section==='video').map(p=>p.code||'').join(' ');
+  const l=CL.filter(c=>!q||((c.name||'')+' '+handle(c.name)+' '+(c.phone||'')+' '+codes(c)).toLowerCase().includes(q));
   if(!l.length)return '<div class="empty z">'+(q?'Aucun résultat.':'Aucun client inscrit pour le moment.')+'</div>';
   return l.map(c=>`<div class="it" data-cl="${esc(c.id)}"><div class="th">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div>
     <div class="in"><b>${esc(c.name)}</b><div class="pr">${esc(handle(c.name))}</div><span class="code">${c.banned?'🚫 SUSPENDU':'✅ ACTIF'}</span><span class="sub">📞 ${esc(c.phone||'')} · 🎬 ${c.nb_videos||0} vidéo${c.nb_videos>1?'s':''}</span><span class="sub">Inscrit le ${esc(new Date(c.created_at).toLocaleDateString('fr-FR'))}</span></div></div>`).join('');
+}
+function vidsClient(c){
+  const l=items.filter(p=>p.client_id===c.id&&p.section==='video');
+  const st=p=>p.status==='En stock'?'🟢 En ligne':p.status==='En attente'?'⏳ En attente':'🚫 Retirée';
+  return `<h3 style="margin:14px 0 4px;font-size:14px">🎬 Ses vidéos (${l.length})</h3>`+(l.length?l.map(p=>{const img=p.photo||(Array.isArray(p.photos)&&p.photos[0])||'';
+    return `<div class="it" data-vid="${esc(p.id)}" style="margin-top:8px"><div class="th">${img?`<img class="th" src="${esc(img)}" alt="" loading="lazy">`:'🎬'}</div>
+    <div class="in"><b>${esc(p.name)}</b><div class="pr">${Number(p.sell_price)>0?esc(fmt(p.sell_price)):'Sans prix'}</div><span class="code">${esc(p.code||'—')}</span><span class="sub">${st(p)} · ${esc(new Date(p.created_at).toLocaleDateString('fr-FR'))}</span></div></div>`}).join(''):'<div class="empty z" style="padding:10px">Aucune vidéo publiée.</div>');
 }
 function ouvrirClient(id){
   const c=CL.find(x=>x.id===id);if(!c)return;
   $('db').innerHTML=`<div class="dc">👥 Client inscrit</div><h2 style="margin:6px 0">${esc(c.name)}</h2>
   ${kv('Pseudo',handle(c.name))}${kv('Téléphone',c.phone)}${kv('Vidéos en ligne',String(c.nb_videos||0))}${kv('Inscrit le',new Date(c.created_at).toLocaleDateString('fr-FR'))}${kv('Statut',c.banned?'🚫 Suspendu':'✅ Actif')}
+  ${vidsClient(c)}
   <div class="btns" style="margin-top:10px"><a class="call" href="tel:${tel(c.phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(c.phone)}" target="_blank" rel="noopener">🟢 WhatsApp</a></div>
   <div class="btns" style="margin-top:8px"><button class="${c.banned?'ok':'del'}" id="cban" type="button">${c.banned?'✅ Réactiver le compte':'🚫 Suspendre le compte'}</button></div>
   <div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
   $('ds').hidden=false;$('dno').onclick=fermerDetail;
+  $('db').querySelectorAll('[data-vid]').forEach(b=>b.onclick=()=>ouvrirDetail(b.dataset.vid));
   $('cban').onclick=async()=>{const susp=!c.banned;
     if(!confirm(susp?'Suspendre le compte de « '+c.name+' » ?\nSes vidéos seront retirées et il ne pourra plus publier.':'Réactiver le compte de « '+c.name+' » ?\n(Ses anciennes vidéos restent retirées.)'))return;
     try{await api('/rest/v1/rpc/suspendre_client',{method:'POST',headers:H({'Content-Type':'application/json'}),body:JSON.stringify({p_client:c.id,p_suspendre:susp})});
@@ -370,11 +380,12 @@ function ouvrirDetail(id){
   ${tel(p.seller_phone)?`<div class="btns"><a class="call" href="tel:${tel(p.seller_phone)}">📞 Appeler</a><a class="wa" href="https://wa.me/${telWa(p.seller_phone)}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
   ${agentsHTML(p)}
   ${p.status==='En attente'?'<div class="btns"><button class="ok" id="dapp" type="button">✅ Approuver et publier</button><button class="del" id="dref" type="button">❌ Refuser</button></div>':''}
-  ${p.section!=='annonce'&&p.section!=='video'&&p.section!=='savoir'&&p.status==='En stock'?'<div class="btns" style="margin-bottom:8px"><button class="ok" id="dnotif" type="button">🔔 Notifier les clients</button></div>':''}<div class="btns"><button class="ok" id="dmod" type="button">✏️ Modifier</button><button class="del" id="ddel" type="button">Supprimer</button></div>${p.client_id?'<div class="btns" style="margin-top:8px"><button class="del" id="dban" type="button">🚫 Suspendre le compte de '+esc(p.auteur||'ce client')+'</button></div>':''}<div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
+  ${p.section!=='annonce'&&p.section!=='video'&&p.section!=='savoir'&&p.status==='En stock'?'<div class="btns" style="margin-bottom:8px"><button class="ok" id="dnotif" type="button">🔔 Notifier les clients</button></div>':''}<div class="btns"><button class="ok" id="dmod" type="button">✏️ Modifier</button><button class="del" id="ddel" type="button">Supprimer</button></div>${p.client_id?'<div class="btns" style="margin-top:8px"><button class="ok" id="dprof" type="button">👤 Voir le profil de '+esc(p.auteur||'ce client')+'</button></div><div class="btns" style="margin-top:8px"><button class="del" id="dban" type="button">🚫 Suspendre le compte de '+esc(p.auteur||'ce client')+'</button></div>':''}<div class="btns" style="margin-top:8px"><button class="no" id="dno" type="button">Fermer</button></div>`;
   $('ds').hidden=false;
   $('dno').onclick=fermerDetail;
   if($('dapp')){$('dapp').onclick=()=>approuver(p);$('dref').onclick=()=>supprimer(p,true)}
   $('ddel').onclick=()=>supprimer(p);
+  if($('dprof'))$('dprof').onclick=()=>ouvrirClient(p.client_id);
   if($('dban'))$('dban').onclick=async()=>{
     if(!confirm('Suspendre le compte de « '+(p.auteur||'ce client')+' » ?\nToutes ses vidéos seront retirées et il ne pourra plus publier.'))return;
     try{await api('/rest/v1/rpc/suspendre_client',{method:'POST',headers:H({'Content-Type':'application/json'}),body:JSON.stringify({p_client:p.client_id,p_suspendre:true})});
@@ -517,7 +528,7 @@ function envoyerTg(blob,label){ // vidéos de l'onglet Vidéos : stockées sur T
 // code unique et simple : ODA-001, ODA-002...
 function prochainCode(r){
   r=r||regActive()||'agadez';const pf=r==='agadez'?'ODA-':'ODA-'+r.slice(0,3).toUpperCase()+'-';
-  const n=items.filter(p=>p.code&&p.code.toUpperCase().startsWith(pf)).map(p=>{const m=/(\d+)$/.exec(p.code||'');return m?parseInt(m[1],10):0});
+  const n=items.filter(p=>p.code&&p.code.toUpperCase().startsWith(pf)&&!/^ODA-V\d/i.test(p.code)).map(p=>{const m=/(\d+)$/.exec(p.code||'');return m?parseInt(m[1],10):0});
   return pf+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
 }
 $('fok').onclick=async()=>{
@@ -547,7 +558,7 @@ $('fok').onclick=async()=>{
       const res=await api('/rest/v1/products?id=eq.'+encodeURIComponent(edit.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(ch)});
       Object.assign(edit,(res&&res[0])||ch);tab=sec;afficher();$('fs').hidden=true;toast('✅ '+(edit.code||'Annonce')+' modifiée');
     }else{
-    const code=prochainCode();if(!nom)nom='Véhicule '+code;
+    const code=sec==='video'?null:prochainCode();if(!nom)nom='Véhicule '+code;
     const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:achat,photo:photo,image_url:photo||null,photos:urls,video_url:video||null,
       seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),code,section:sec,sous_categorie:S.typ?$('ftyp').value:(S.vl?($('fvlk').value||null):null),seller_code:S.vl?($('fvs').value||null):null,abonnement_fin:S.abo?($('fabo').value||null):null,region:regActive()||'agadez',status:'En stock',quantite:1,stock:100};
     if(S.art){row.quartier=$('fquart').value.trim();row.id_card_photo=carte;row.person_photo=pers}
